@@ -1,0 +1,1763 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WortLabor – Pseudowort- & Nonsens-Satz-Trainer</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Ausschließlich EINE klassische Serifenschrift (Libre Baskerville) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Libre Baskerville"', 'Georgia', '"Times New Roman"', 'serif'],
+                        serif: ['"Libre Baskerville"', 'Georgia', '"Times New Roman"', 'serif'],
+                        mono: ['"Libre Baskerville"', 'Georgia', '"Times New Roman"', 'serif'],
+                    },
+                    colors: {
+                        paper: {
+                            light: '#f3f5f6',
+                            base: '#e5e9eb',
+                            dark: '#d6dce0',
+                            edge: '#b4c0c6',
+                        },
+                        ink: {
+                            primary: '#232c30',
+                            muted: '#526067',
+                            faint: '#7b8a91',
+                        },
+                        stamp: {
+                            DEFAULT: '#3c5d63',
+                            hover: '#2d474c',
+                            soft: '#688990',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Strikte Vorgabe: Nur EINE Schriftart mit Serifen & eckige Kanten im gesamten Dokument */
+        * {
+            font-family: 'Libre Baskerville', Georgia, 'Times New Roman', serif !important;
+            border-radius: 0px !important;
+        }
+
+        /* Zurückhaltender, strukturierter Papierhintergrund in Grau & Graublaugrün */
+        body {
+            background-color: #dde3e6;
+            background-image:
+                radial-gradient(ellipse at 6% 48%, rgba(60, 93, 99, 0.09) 0%, transparent 24%),
+                radial-gradient(ellipse at 90% 85%, rgba(74, 96, 102, 0.11) 0%, transparent 28%),
+                radial-gradient(circle at 50% 50%, rgba(244, 247, 248, 0.65) 0%, rgba(212, 220, 224, 0.5) 85%, rgba(190, 200, 206, 0.65) 100%),
+                repeating-linear-gradient(0deg, rgba(45, 62, 68, 0.025) 0px, rgba(45, 62, 68, 0.025) 1px, transparent 1px, transparent 3px),
+                repeating-linear-gradient(90deg, rgba(45, 62, 68, 0.02) 0px, rgba(45, 62, 68, 0.02) 1px, transparent 1px, transparent 4px);
+            background-attachment: fixed;
+            color: #232c30;
+        }
+
+        /* Kartenoberfläche mit feiner Papierkörnung in kühlem Lichtgrau */
+        .postcard-surface {
+            background-color: rgba(243, 246, 247, 0.86);
+            background-image:
+                radial-gradient(circle at 15% 15%, rgba(255, 255, 255, 0.6) 0%, transparent 55%),
+                radial-gradient(circle at 88% 82%, rgba(60, 93, 99, 0.06) 0%, transparent 45%);
+            box-shadow:
+                0 2px 10px rgba(35, 44, 48, 0.07),
+                inset 0 0 20px rgba(176, 189, 195, 0.18);
+        }
+
+        /* Eckige Stempel-Box in Graublaugrün */
+        .stamp-box {
+            border: 1.5px solid #3c5d63;
+            color: #3c5d63;
+            background-color: rgba(243, 246, 247, 0.7);
+        }
+
+        /* Eigene Animationen für die Audio-Wellen und sanfte Übergänge */
+        @keyframes soundWave {
+            0%, 100% { transform: scaleY(0.35); }
+            50% { transform: scaleY(1); }
+        }
+        .wave-bar {
+            transform-origin: center;
+            transition: transform 0.2s ease;
+        }
+        .is-speaking .wave-bar-1 { animation: soundWave 0.6s infinite ease-in-out 0.0s; }
+        .is-speaking .wave-bar-2 { animation: soundWave 0.6s infinite ease-in-out 0.15s; }
+        .is-speaking .wave-bar-3 { animation: soundWave 0.6s infinite ease-in-out 0.3s; }
+        .is-speaking .wave-bar-4 { animation: soundWave 0.6s infinite ease-in-out 0.1s; }
+        .is-speaking .wave-bar-5 { animation: soundWave 0.6s infinite ease-in-out 0.25s; }
+
+        @keyframes popIn {
+            0% { opacity: 0; transform: translateY(6px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        .animate-pop {
+            animation: popIn 0.25s ease-out forwards;
+        }
+
+        /* Dramatischer Shake-Effekt bei Tippfehlern */
+        @keyframes ohNoShake {
+            0%, 100% { transform: translateX(0) rotate(0deg); }
+            15% { transform: translateX(-8px) rotate(-1deg); }
+            30% { transform: translateX(7px) rotate(1deg); }
+            45% { transform: translateX(-6px) rotate(-0.7deg); }
+            60% { transform: translateX(5px) rotate(0.7deg); }
+            75% { transform: translateX(-3px) rotate(-0.3deg); }
+            90% { transform: translateX(2px) rotate(0.3deg); }
+        }
+        .animate-oh-no {
+            animation: ohNoShake 0.55s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+        }
+
+        /* Zurückhaltende Papier-Konfetti-Schnipsel bei richtiger Antwort */
+        @keyframes confettiFall {
+            0% {
+                opacity: 0.95;
+                transform: translate(0, 0) rotate(0deg) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(var(--tx, 0px), var(--ty, 150px)) rotate(var(--rot, 480deg)) scale(0.75);
+            }
+        }
+        .confetti-piece {
+            position: fixed;
+            pointer-events: none;
+            z-index: 50;
+            animation: confettiFall 1.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col selection:bg-stamp selection:text-paper-light">
+
+    <!-- Top Navigation / Postkarten-Kopfzeile -->
+    <header class="border-b border-paper-edge/80 bg-paper-base/80 backdrop-blur-sm sticky top-0 z-20">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-3">
+            <!-- Titel im Stil des Postkarten-Stempels -->
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg border border-stamp/70 bg-paper-light/80 flex items-center justify-center text-stamp">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg sm:text-xl tracking-widest uppercase text-stamp leading-none">WortLabor</h1>
+                    <span class="text-xs text-ink-muted tracking-wide">designed by Ultimo Primas - Ladies &amp; UK &amp; gemini</span>
+                </div>
+            </div>
+
+            <!-- Punkte, Serie & Effekte im Briefmarken-Look -->
+            <div class="flex items-center gap-2 sm:gap-2.5">
+                <button id="btnToggleSfx" type="button" class="flex items-center gap-1.5 bg-paper-light/80 hover:bg-paper-light border border-paper-edge px-3 py-1.5 rounded-lg text-xs sm:text-sm text-ink-primary transition-colors cursor-pointer" title="Sound-Effekte ein- oder ausschalten">
+                    <span id="sfxIcon" class="text-stamp">♪</span>
+                    <span id="sfxLabel" class="hidden sm:inline">Ton: An</span>
+                </button>
+                <div class="stamp-box px-2.5 py-1 rounded text-xs tracking-wider uppercase flex items-center gap-1.5" title="Aktuelle Serie">
+                    <span>Serie</span>
+                    <strong id="streakDisplay" class="font-bold">0</strong>
+                </div>
+                <div class="stamp-box px-2.5 py-1 rounded text-xs tracking-wider uppercase flex items-center gap-1.5" title="Gesamtpunktzahl">
+                    <span>Punkte</span>
+                    <strong id="scoreDisplay" class="font-bold">0</strong>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hauptbereich -->
+    <main class="flex-1 max-w-3xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-9 flex flex-col gap-5">
+
+        <!-- Browser TTS Warnhinweis -->
+        <div id="ttsWarning" class="hidden postcard-surface border border-stamp/50 rounded-xl p-4 text-ink-primary text-sm flex items-start gap-3">
+            <span class="text-stamp font-bold text-base leading-none mt-0.5">!</span>
+            <div>
+                <p class="font-bold text-stamp">Hinweis zur Sprachausgabe</p>
+                <p id="ttsWarningText" class="text-ink-muted mt-0.5 text-xs sm:text-sm">Dein Browser meldet aktuell keine speziell installierte deutsche Stimme. Die Sprachausgabe nutzt die Standardstimme deines Systems.</p>
+            </div>
+        </div>
+
+        <!-- Modus-Umschalter: Einzelne Fantasiewörter vs. Ganze Nonsens-Sätze -->
+        <div class="postcard-surface border border-paper-edge rounded-xl p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="flex items-center gap-1.5 bg-paper-dark/60 p-1 rounded-lg border border-paper-edge/80 w-full sm:w-auto" role="group" aria-label="Trainingsmodus wählen">
+                <button id="modeWordsBtn" type="button" data-mode="words" class="mode-btn flex-1 sm:flex-initial px-4 py-2 rounded-md text-xs sm:text-sm font-bold tracking-wide transition-all bg-stamp text-paper-light cursor-pointer">
+                    Fantasiewörter
+                </button>
+                <button id="modeSentencesBtn" type="button" data-mode="sentences" class="mode-btn flex-1 sm:flex-initial px-4 py-2 rounded-md text-xs sm:text-sm font-normal tracking-wide transition-all text-ink-muted hover:text-ink-primary cursor-pointer">
+                    Ganze Nonsens-Sätze
+                </button>
+            </div>
+
+            <button id="btnShuffle" type="button" class="inline-flex items-center justify-center gap-1.5 bg-paper-light/90 hover:bg-paper-light active:scale-[0.99] text-ink-primary border border-paper-edge px-3.5 py-2 rounded-lg text-xs sm:text-sm transition-all cursor-pointer" title="Karten komplett neu durchmischen">
+                <span class="text-stamp">↻</span>
+                <span>Neu mischen</span>
+            </button>
+        </div>
+
+        <!-- Filterleiste (Schwierigkeitsgrad) & Fortschritt -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 postcard-surface border border-paper-edge px-4 py-3 rounded-xl">
+            <!-- Schwierigkeits-Tabs -->
+            <div class="flex flex-wrap items-center gap-1.5" role="group" aria-label="Schwierigkeitsstufe wählen">
+                <button type="button" data-level="alle" class="level-btn px-3 py-1 rounded-md text-xs sm:text-sm font-bold transition-all bg-ink-primary text-paper-light cursor-pointer">Alle</button>
+                <button type="button" data-level="leicht" class="level-btn px-3 py-1 rounded-md text-xs sm:text-sm transition-all text-ink-muted hover:text-ink-primary cursor-pointer">Leicht</button>
+                <button type="button" data-level="mittel" class="level-btn px-3 py-1 rounded-md text-xs sm:text-sm transition-all text-ink-muted hover:text-ink-primary cursor-pointer">Mittel</button>
+                <button type="button" data-level="knifflig" class="level-btn px-3 py-1 rounded-md text-xs sm:text-sm transition-all text-ink-muted hover:text-ink-primary cursor-pointer">Knifflig</button>
+            </div>
+
+            <!-- Fortschrittsanzeige -->
+            <div class="flex items-center gap-3 min-w-[170px]">
+                <div class="flex-1 h-2 bg-paper-dark rounded-full overflow-hidden border border-paper-edge/60">
+                    <div id="progressBar" class="h-full bg-stamp rounded-full transition-all duration-300" style="width: 5%"></div>
+                </div>
+                <span id="progressText" class="text-xs text-ink-muted whitespace-nowrap">1 / 28</span>
+            </div>
+        </div>
+
+        <!-- Hauptkarte im Stil einer historischen Postkarte -->
+        <section id="mainCard" class="postcard-surface border-2 border-paper-edge rounded-xl p-5 sm:p-8 flex flex-col gap-6 relative">
+            
+            <!-- Postkarten-Kopfzeile mit Stempel-Optik & Briefmarken-Rahmen -->
+            <div class="flex items-start justify-between gap-3 border-b border-paper-edge/80 pb-4">
+                <div class="flex flex-col gap-1.5">
+                    <span id="postcardHeaderLabel" class="text-xs sm:text-sm tracking-[0.22em] uppercase font-bold text-stamp">
+                        POSTKARTE · EINZELWORT
+                    </span>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span id="difficultyBadge" class="inline-flex items-center px-2.5 py-0.5 rounded text-xs border border-ink-muted/40 text-ink-primary bg-paper-light/60">
+                            Stufe: Mittel
+                        </span>
+                        <span id="focusHint" class="text-xs text-ink-muted italic">
+                            Fokus: Dehnungs-h & Doppelkonsonant
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Dekoratives Briefmarken-Feld wie auf der hochgeladenen Postkarte -->
+                <div class="stamp-box px-2.5 py-1.5 text-[10px] leading-tight tracking-wider uppercase text-center select-none shrink-0 hidden sm:block">
+                    <div>HÖRPROBE</div>
+                    <div class="border-t border-stamp/50 my-0.5"></div>
+                    <div>DIKTAT</div>
+                </div>
+            </div>
+
+            <!-- Audio-Steuerungsbereich -->
+            <div class="bg-paper-base/65 border border-paper-edge rounded-xl p-5 sm:p-6 flex flex-col items-center justify-center text-center gap-4">
+                
+                <!-- Visuelle Schallwellen-Anzeige -->
+                <div id="waveVisualizer" class="flex items-center justify-center gap-1.5 h-8 px-4" aria-hidden="true">
+                    <span class="wave-bar wave-bar-1 w-1 h-6 bg-stamp rounded-full"></span>
+                    <span class="wave-bar wave-bar-2 w-1 h-8 bg-ink-primary rounded-full"></span>
+                    <span class="wave-bar wave-bar-3 w-1 h-5 bg-stamp rounded-full"></span>
+                    <span class="wave-bar wave-bar-4 w-1 h-7 bg-ink-primary rounded-full"></span>
+                    <span class="wave-bar wave-bar-5 w-1 h-6 bg-stamp rounded-full"></span>
+                </div>
+
+                <p id="audioStatusText" class="text-sm text-ink-muted max-w-lg leading-relaxed">
+                    Klicke auf <strong class="text-ink-primary">„Anhören“</strong> und notiere das Fantasiewort genau so, wie man es im Deutschen schreibt.
+                </p>
+
+                <!-- Vorlese-Buttons -->
+                <div class="flex flex-wrap items-center justify-center gap-3 w-full">
+                    <button id="btnSpeakNormal" type="button" class="flex-1 sm:flex-initial min-w-[175px] inline-flex items-center justify-center gap-2 bg-stamp hover:bg-stamp-hover active:scale-[0.99] text-paper-light font-bold px-5 py-3 rounded-lg transition-all cursor-pointer">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z" />
+                        </svg>
+                        <span>Anhören</span>
+                    </button>
+
+                    <button id="btnSpeakSlow" type="button" class="flex-1 sm:flex-initial min-w-[175px] inline-flex items-center justify-center gap-2 bg-paper-light hover:bg-white/80 active:scale-[0.99] text-ink-primary border border-paper-edge px-5 py-3 rounded-lg transition-all cursor-pointer">
+                        <svg class="w-4 h-4 text-stamp" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Langsamer (0.7×)</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Eingabeformular (passt sich automatisch an Wort- oder Satzmodus an) -->
+            <form id="answerForm" class="flex flex-col gap-3" novalidate>
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <label id="inputLabel" for="wordInput" class="text-sm font-bold text-ink-primary">
+                        Deine Schreibweise:
+                    </label>
+                    <span id="inputGrammarHint" class="text-xs text-ink-muted italic">
+                        Hinweis: Fantasienomen schreibt man am Anfang groß.
+                    </span>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <!-- Einzelwort-Eingabefeld -->
+                    <input
+                        id="wordInput"
+                        type="text"
+                        autocomplete="off"
+                        autocorrect="off"
+                        autocapitalize="off"
+                        spellcheck="false"
+                        data-gramm="false"
+                        placeholder="Wort hier eintippen …"
+                        class="flex-1 bg-paper-light/95 border-2 border-paper-edge focus:border-stamp rounded-lg px-4 py-3.5 text-lg sm:text-xl text-ink-primary placeholder-ink-faint outline-none transition-all"
+                    />
+                    <!-- Satz-Eingabefeld (mehrzeilig im Satzmodus) -->
+                    <textarea
+                        id="sentenceInput"
+                        rows="2"
+                        autocomplete="off"
+                        autocorrect="off"
+                        autocapitalize="off"
+                        spellcheck="false"
+                        data-gramm="false"
+                        placeholder="Ganzen Nonsens-Satz inklusive Satzzeichen eintippen …"
+                        class="hidden flex-1 bg-paper-light/95 border-2 border-paper-edge focus:border-stamp rounded-lg px-4 py-3 text-base sm:text-lg text-ink-primary placeholder-ink-faint outline-none transition-all leading-relaxed resize-y"
+                    ></textarea>
+
+                    <button id="btnCheck" type="submit" class="bg-ink-primary hover:bg-ink-primary/90 active:scale-[0.99] text-paper-light font-bold px-6 py-3.5 rounded-lg transition-all cursor-pointer whitespace-nowrap self-stretch sm:self-auto">
+                        Überprüfen
+                    </button>
+                </div>
+            </form>
+
+            <!-- Feedback-Bereich -->
+            <div id="feedbackContainer" class="hidden animate-pop rounded-xl p-5 border">
+                <!-- Inhalt wird dynamisch via JS befüllt -->
+            </div>
+
+        </section>
+
+        <!-- Lehrkraft- / Einstellungs-Bereich (ausklappbar) -->
+        <details class="group postcard-surface border border-paper-edge rounded-xl overflow-hidden">
+            <summary class="list-none px-5 py-3.5 flex items-center justify-between cursor-pointer hover:bg-paper-light/50 transition-colors select-none">
+                <div class="flex items-center gap-2.5">
+                    <span class="text-stamp font-bold">§</span>
+                    <span class="text-xs sm:text-sm font-bold text-ink-primary">Lehrkraft-Modus: Eigene Wörter oder Nonsens-Sätze hinzufügen & Stimme wählen</span>
+                </div>
+                <svg class="w-4 h-4 text-ink-muted transition-transform duration-200 group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                </svg>
+            </summary>
+
+            <div class="px-5 pb-5 pt-3 border-t border-paper-edge/80 flex flex-col gap-4">
+                <!-- Stimmenauswahl -->
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <label for="voiceSelect" class="text-xs font-bold text-ink-muted uppercase tracking-wider">Deutsche TTS-Stimme:</label>
+                    <select id="voiceSelect" class="bg-paper-light border border-paper-edge rounded-lg px-3 py-2 text-sm text-ink-primary outline-none focus:border-stamp max-w-full sm:max-w-xs">
+                        <option value="">Automatisch (de-DE)</option>
+                    </select>
+                </div>
+
+                <!-- Eigenes Fantasiewort oder eigenen Satz hinzufügen -->
+                <form id="customWordForm" class="flex flex-col sm:flex-row gap-2.5 pt-3 border-t border-paper-edge/60">
+                    <input
+                        id="customWordInput"
+                        type="text"
+                        autocomplete="off"
+                        spellcheck="false"
+                        placeholder="Neues Wort oder ganzer Nonsens-Satz …"
+                        class="flex-1 bg-paper-light border border-paper-edge focus:border-stamp rounded-lg px-3.5 py-2 text-sm text-ink-primary placeholder-ink-faint outline-none"
+                    />
+                    <input
+                        id="customHintInput"
+                        type="text"
+                        placeholder="Optionaler Hinweis"
+                        class="sm:w-48 bg-paper-light border border-paper-edge focus:border-stamp rounded-lg px-3.5 py-2 text-sm text-ink-primary placeholder-ink-faint outline-none"
+                    />
+                    <button type="submit" class="bg-stamp hover:bg-stamp-hover text-paper-light text-xs sm:text-sm font-bold px-4 py-2 rounded-lg transition-colors cursor-pointer whitespace-nowrap">
+                        + Hinzufügen
+                    </button>
+                </form>
+
+                <!-- Test-Buttons für die Sound-Reaktionen -->
+                <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-paper-edge/60">
+                    <span class="text-xs font-bold text-ink-muted uppercase tracking-wider">Reaktions-Sounds testen:</span>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button id="btnTestSuccessSfx" type="button" class="bg-paper-light hover:bg-white text-ink-primary border border-paper-edge text-xs px-3 py-1.5 rounded-lg transition-colors cursor-pointer">
+                            Test: Zufalls-Jubel (7 Varianten)
+                        </button>
+                        <button id="btnTestFailSfx" type="button" class="bg-paper-light hover:bg-white text-stamp border border-stamp/50 text-xs px-3 py-1.5 rounded-lg transition-colors cursor-pointer">
+                            Test: Zufalls-Nerv-Fail (7 Varianten)
+                        </button>
+                    </div>
+                </div>
+                <p id="teacherToast" class="hidden text-xs text-stamp font-bold"></p>
+            </div>
+        </details>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="max-w-3xl w-full mx-auto px-4 sm:px-6 py-5 text-center text-xs text-ink-muted">
+        Tipp: Nutze <span class="px-1.5 py-0.5 bg-paper-light border border-paper-edge rounded text-ink-primary">Enter</span> zum Prüfen oder Weitergehen.
+    </footer>
+
+    <script>
+        /**
+         * Kuratierte Wortliste deutscher Pseudowörter (Fantasiewörter) für ca. 13-Jährige.
+         */
+        const INITIAL_WORDS = [
+            {
+                text: "Wahrschuddel",
+                level: "mittel",
+                focus: "Dehnungs-h (Wahr-) & Doppelkonsonant (-dd-)",
+                ruleTip: "Nach dem langen 'a' folgt ein stummes 'h' (wie in 'wahr'), nach dem kurzen 'u' steht ein doppeltes 'd'."
+            },
+            {
+                text: "Brummknopf",
+                level: "leicht",
+                focus: "Doppelkonsonant (-mm-) & Auslaut (-pf)",
+                ruleTip: "Kurzes 'u' führt zu doppeltem 'm' (Brumm-), am Ende steht die Konsonantenverbindung 'pf'."
+            },
+            {
+                text: "Zwirbelkeks",
+                level: "leicht",
+                focus: "Anlaut Z- & silbentrennendes -el",
+                ruleTip: "Im Deutschen schreibt man am Wortanfang 'Z' (nicht 'Ts') und die Endung '-el'."
+            },
+            {
+                text: "Knackwurz",
+                level: "leicht",
+                focus: "Konsonantenverdopplung (-ck-) & -tz/-z",
+                ruleTip: "Nach dem kurzen 'a' steht 'ck' statt 'kk'. Nach einem Konsonanten ('r') steht einfaches 'z' (wie in 'Wurz')."
+            },
+            {
+                text: "Kribbelspatz",
+                level: "leicht",
+                focus: "Doppelkonsonant (-bb-), sp- & -tz",
+                ruleTip: "Kurzes 'i' -> 'bb'. Am Silbenanfang spricht man 'schp', schreibt aber 'sp' (Spatz). Nach kurzem 'a' folgt 'tz'."
+            },
+            {
+                text: "Schwammflöte",
+                level: "leicht",
+                focus: "schw-, Doppel-m & Umlaut ö",
+                ruleTip: "Nach dem kurzen 'a' folgt 'mm', im zweiten Teil steht der Umlaut 'ö'."
+            },
+            {
+                text: "Schmetterlingel",
+                level: "mittel",
+                focus: "schm-, Doppel-t (-tt-) & -ng-",
+                ruleTip: "Nach kurzem 'e' folgt ein doppeltes 't' (wie bei Schmetterling)."
+            },
+            {
+                text: "Flimmerstutz",
+                level: "mittel",
+                focus: "Doppel-m, st- & Auslaut -tz",
+                ruleTip: "Kurzes 'i' -> 'mm'; gesprochenes 'scht' am Silbenanfang schreibt man 'st'; kurzes 'u' -> 'tz'."
+            },
+            {
+                text: "Glitzerschwamm",
+                level: "mittel",
+                focus: "-tz- in der Wortmitte & Doppel-m",
+                ruleTip: "Nach kurzem 'i' steht 'tz' (Glitzer), nach kurzem 'a' steht 'mm' (Schwamm)."
+            },
+            {
+                text: "Pflanzkropf",
+                level: "mittel",
+                focus: "Anlaut Pfl- & Auslaut -pf",
+                ruleTip: "Achte auf das 'f' nach dem 'P' am Anfang und vor dem Ende (Pflanz-kropf)."
+            },
+            {
+                text: "Strohblümpel",
+                level: "mittel",
+                focus: "st-, Dehnungs-h (-oh) & Umlaut ü",
+                ruleTip: "Am Anfang 'St' (ohne sch), langes 'o' mit Dehnungs-h wie in 'Stroh', danach Umlaut 'ü'."
+            },
+            {
+                text: "Quatschplörre",
+                level: "knifflig",
+                focus: "Qu-, -tsch- & Doppel-r (-rr-)",
+                ruleTip: "Auf 'Q' folgt im Deutschen immer 'u' (Quatsch). Nach dem kurzen 'ö' steht doppeltes 'r'."
+            },
+            {
+                text: "Spiegelschlick",
+                level: "knifflig",
+                focus: "Sp-, langes ie & -ck",
+                ruleTip: "Langes 'i' wird als 'ie' geschrieben (Spiegel), kurzes 'i' am Ende führt zu 'ck' (Schlick)."
+            },
+            {
+                text: "Verblüffknall",
+                level: "knifflig",
+                focus: "Vorsilbe Ver-, Doppel-f & Doppel-l",
+                ruleTip: "Die Vorsilbe 'Ver-' schreibt man immer mit 'V'. Kurzes 'ü' -> 'ff', kurzes 'a' -> 'll'."
+            },
+            {
+                text: "Schnarchpfropf",
+                level: "knifflig",
+                focus: "schn-, -ch- & Doppeltes pf (pf-pf)",
+                ruleTip: "Auf 'Schnarch' folgt 'pfropf' – sowohl am Anfang als auch am Ende der zweiten Silbe steht 'pf'."
+            },
+            {
+                text: "Quietschdrossel",
+                level: "knifflig",
+                focus: "Qu-, langes ie, tsch & Doppel-s (-ss-)",
+                ruleTip: "Qu + ie + tsch im ersten Teil; nach dem kurzen 'o' folgt ein scharfes Doppel-s (-ss-)."
+            },
+            {
+                text: "Fahrtwindstrolch",
+                level: "knifflig",
+                focus: "Dehnungs-h (Fahrt), Auslautverhärtung -d & -ch",
+                ruleTip: "Fahrt mit 'h', Wind mit 'd' am Ende (Winde) und Strolch mit 'ch'."
+            },
+            {
+                text: "Blitzgeschepper",
+                level: "knifflig",
+                focus: "-tz-, sch- & Doppel-p (-pp-)",
+                ruleTip: "Nach kurzem 'i' steht 'tz' (Blitz), nach kurzem 'e' steht doppeltes 'p' (Geschepper)."
+            },
+            {
+                text: "Knirschpflaume",
+                level: "mittel",
+                focus: "kn-, -sch-, pfl- & Diphthong au",
+                ruleTip: "Am Anfang 'Kn', danach 'sch' und direkt darauf 'pfl' (wie in Pflaume)."
+            },
+            {
+                text: "Schlumpfqualle",
+                level: "knifflig",
+                focus: "schl-, -mpf-, Qu- & Doppel-l (-ll-)",
+                ruleTip: "Auf 'Schlumpf' mit 'mpf' folgt 'qualle' mit 'Qu' und doppeltem 'l' nach dem kurzen 'a'."
+            },
+            {
+                text: "Drachenpfütze",
+                level: "mittel",
+                focus: "-ch-, pf-, Umlaut ü & -tz-",
+                ruleTip: "Nach kurzem 'a' steht 'ch' (Drachen), danach 'pf' + 'ü' und nach dem kurzen 'ü' steht 'tz'."
+            },
+            {
+                text: "Flüsterzwerg",
+                level: "leicht",
+                focus: "Umlaut ü, st- & Auslautverhärtung -g",
+                ruleTip: "Gesprochenes 'scht' nach 'ü' schreibt man 'st'; am Ende steht 'g' (wie bei Zwerge)."
+            },
+            {
+                text: "Wackelpudding",
+                level: "leicht",
+                focus: "-ck-, Doppel-d (-dd-) & -ng",
+                ruleTip: "Nach kurzem 'a' folgt 'ck' (Wackel-), nach kurzem 'u' folgt doppeltes 'd' (Pudding)."
+            },
+            {
+                text: "Kratzbürste",
+                level: "mittel",
+                focus: "-tz-, Umlaut ü & st-",
+                ruleTip: "Nach dem kurzen 'a' steht 'tz' (Kratz-), danach der Umlaut 'ü' und 'st'."
+            },
+            {
+                text: "Nebelschleier",
+                level: "mittel",
+                focus: "schl-, Diphthong ei & Endung -er",
+                ruleTip: "Im zweiten Wortteil schreibt man 'schl' und den Zwielaut 'ei' (nicht 'ai')."
+            },
+            {
+                text: "Spukschloss",
+                level: "knifflig",
+                focus: "Sp-, schl- & Doppel-s (-ss)",
+                ruleTip: "Am Anfang 'Sp' (ohne sch), danach 'schloss' mit doppeltem 's' nach dem kurzen 'o'."
+            },
+            {
+                text: "Mückenstich",
+                level: "leicht",
+                focus: "Umlaut ü, -ck-, st- & -ch",
+                ruleTip: "Nach dem kurzen 'ü' steht 'ck' (Mücken-), danach 'st' und am Ende 'ch'."
+            },
+            {
+                text: "Pfefferschnupfen",
+                level: "knifflig",
+                focus: "Pf-, Doppel-f (-ff-), schn- & -pf-",
+                ruleTip: "Vorne 'Pf' + doppeltes 'f' (Pfeffer), hinten 'schn' + 'pf' (Schnupfen)."
+            }
+        ];
+
+        /**
+         * Kuratierte Liste ganzer Nonsens-Sätze mit eingebauten Fantasiewörtern.
+         * Trainiert Groß-/Kleinschreibung im Satz, Zeichensetzung und Pseudowörter im Kontext.
+         */
+        const INITIAL_SENTENCES = [
+            {
+                text: "Der freche Wahrschuddel klaut dem Zwirbelkeks die Mütze.",
+                level: "leicht",
+                focus: "Großschreibung der Nomen, -ck/-tz & Satzpunkt",
+                ruleTip: "Wahrschuddel (Dehnungs-h & dd) und Zwirbelkeks (Z- & -el) sind Nomen und werden großgeschrieben. Punkt am Ende!"
+            },
+            {
+                text: "Ein kleiner Brummknopf tanzt auf der Schwammflöte.",
+                level: "leicht",
+                focus: "Doppel-m (-mm-), -pf, -tz- & Umlaut ö",
+                ruleTip: "Brummknopf (-mm- und -pf) und Schwammflöte (-mm- und ö) großschreiben; 'tanzt' schreibt man mit 'tz' + 't'."
+            },
+            {
+                text: "Warum knabbert der Flüsterzwerg an einem Knackwurz?",
+                level: "leicht",
+                focus: "Fragezeichen, Umlaut ü, -ck- & -z",
+                ruleTip: "Fragesatz mit Fragezeichen am Ende! 'knabbert' mit doppeltem 'b', 'Knackwurz' mit 'ck' und einfachem 'z'."
+            },
+            {
+                text: "Drei Kribbelspatze hüpfen über den Wackelpudding.",
+                level: "leicht",
+                focus: "Doppelkonsonanten (-bb-, -dd-), sp-, -tz & -ck-",
+                ruleTip: "Kribbelspatze (bb, sp, tz) und Wackelpudding (ck, dd) großschreiben."
+            },
+            {
+                text: "Im dunklen Nebelschleier versteckt sich ein Mückenstich.",
+                level: "leicht",
+                focus: "schl-, Diphthong ei, -ck- & Umlaut ü",
+                ruleTip: "Nebelschleier ('ei') und Mückenstich ('ü' + 'ck') sind Nomen."
+            },
+            {
+                text: "Der Schmetterlingel poliert seinen glänzenden Flimmerstutz.",
+                level: "mittel",
+                focus: "Doppel-t (-tt-), Doppel-m (-mm-), st- & -tz",
+                ruleTip: "Schmetterlingel (tt) und Flimmerstutz (mm, st, tz) großschreiben."
+            },
+            {
+                text: "Unter dem Strohblümpel wächst ein riesiger Pflanzkropf.",
+                level: "mittel",
+                focus: "Dehnungs-h (-oh), Umlaut ü, Pfl- & -pf",
+                ruleTip: "Strohblümpel (Dehnungs-h + ü) und Pflanzkropf (Pfl- vorne, -pf hinten) sind Nomen."
+            },
+            {
+                text: "Eine mutige Kratzbürste kitzelt den Glitzerschwamm.",
+                level: "mittel",
+                focus: "Mehrfaches -tz-, Umlaut ü & Doppel-m (-mm)",
+                ruleTip: "Kratzbürste (-tz- & ü), 'kitzelt' (-tz-) und Glitzerschwamm (-tz- & -mm) groß bzw. klein beachten."
+            },
+            {
+                text: "Plötzlich landet eine Knirschpflaume in der Drachenpfütze.",
+                level: "mittel",
+                focus: "tz, kn-, pfl-, ch & Umlaut ü",
+                ruleTip: "'Plötzlich' mit 'tz'; Knirschpflaume (kn + pfl) und Drachenpfütze (ch + pf + ü + tz) großschreiben."
+            },
+            {
+                text: "Wenn der Wahrschuddel niest, wackelt der ganze Brummknopf.",
+                level: "mittel",
+                focus: "Komma im Nebensatz, langes ie & Doppelkonsonanten",
+                ruleTip: "Komma nach 'niest'! 'niest' schreibt man mit langem 'ie', Wahrschuddel mit 'h' und 'dd'."
+            },
+            {
+                text: "Die Schlumpfqualle trinkt am liebsten kalte Quatschplörre.",
+                level: "knifflig",
+                focus: "schl-, -mpf-, Qu-, -tsch- & Doppel-r (-rr-)",
+                ruleTip: "Schlumpfqualle (mpf + Qu + ll) und Quatschplörre (Qu + tsch + rr) großschreiben."
+            },
+            {
+                text: "Im alten Spukschloss erschreckt ein Schnarchpfropf die Besucher.",
+                level: "knifflig",
+                focus: "Sp-, schl-, Doppel-s (-ss) & doppeltes pf",
+                ruleTip: "Spukschloss (Sp + schl + ss) und Schnarchpfropf (schn + ch + pf + pf) sind Nomen."
+            },
+            {
+                text: "Mit lautem Blitzgeschepper rutscht der Spiegelschlick ins Tal.",
+                level: "knifflig",
+                focus: "-tz-, Doppel-p (-pp-), Sp-, ie & -ck",
+                ruleTip: "Blitzgeschepper (tz + pp) und Spiegelschlick (Sp + ie + ck) großschreiben."
+            },
+            {
+                text: "Eine Quietschdrossel hat heute schrecklichen Pfefferschnupfen.",
+                level: "knifflig",
+                focus: "Qu-, ie, tsch, Doppel-s, Pf- & Doppel-f",
+                ruleTip: "Quietschdrossel (Qu + ie + tsch + ss) und Pfefferschnupfen (Pf + ff + schn + pf) beachten."
+            },
+            {
+                text: "Obwohl der Fahrtwindstrolch lacht, verursacht er einen Verblüffknall.",
+                level: "knifflig",
+                focus: "Komma, Dehnungs-h, Vorsilbe Ver-, ff & ll",
+                ruleTip: "Komma nach 'lacht'! Fahrtwindstrolch (Fahrt mit h, Wind mit d) und Verblüffknall (Ver- + ff + ll)."
+            }
+        ];
+
+        /**
+         * Echter Fisher-Yates-Zufallsmischer (unbiased shuffle) für maximale Abwechslung.
+         */
+        function fisherYatesShuffle(array, avoidFirstText = null) {
+            const copy = [...array];
+            for (let i = copy.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [copy[i], copy[j]] = [copy[j], copy[i]];
+            }
+            if (avoidFirstText && copy.length > 1 && copy[0].text === avoidFirstText) {
+                const swapIdx = 1 + Math.floor(Math.random() * (copy.length - 1));
+                [copy[0], copy[swapIdx]] = [copy[swapIdx], copy[0]];
+            }
+            return copy;
+        }
+
+        // Anwendungszustand (State)
+        let activeMode = "words"; // "words" | "sentences"
+        let wordsList = [INITIAL_WORDS[0], ...fisherYatesShuffle(INITIAL_WORDS.slice(1))];
+        let sentencesList = fisherYatesShuffle(INITIAL_SENTENCES);
+        let activeLevel = "alle";
+        let currentIndex = 0;
+        let score = 0;
+        let streak = 0;
+        let solvedCurrent = false;
+        let germanVoices = [];
+        let selectedVoiceURI = "";
+        let sfxEnabled = true;
+        let audioCtx = null;
+        let lastSuccessSfxIdx = -1;
+        let lastFailSfxIdx = -1;
+
+        // DOM-Referenzen
+        const elMainCard = document.getElementById("mainCard");
+        const elBtnToggleSfx = document.getElementById("btnToggleSfx");
+        const elSfxIcon = document.getElementById("sfxIcon");
+        const elSfxLabel = document.getElementById("sfxLabel");
+        const elModeWordsBtn = document.getElementById("modeWordsBtn");
+        const elModeSentencesBtn = document.getElementById("modeSentencesBtn");
+        const elBtnShuffle = document.getElementById("btnShuffle");
+        const elBtnTestSuccessSfx = document.getElementById("btnTestSuccessSfx");
+        const elBtnTestFailSfx = document.getElementById("btnTestFailSfx");
+        const elWordInput = document.getElementById("wordInput");
+        const elSentenceInput = document.getElementById("sentenceInput");
+        const elInputLabel = document.getElementById("inputLabel");
+        const elInputGrammarHint = document.getElementById("inputGrammarHint");
+        const elPostcardHeaderLabel = document.getElementById("postcardHeaderLabel");
+        const elAnswerForm = document.getElementById("answerForm");
+        const elBtnCheck = document.getElementById("btnCheck");
+        const elBtnSpeakNormal = document.getElementById("btnSpeakNormal");
+        const elBtnSpeakSlow = document.getElementById("btnSpeakSlow");
+        const elWaveVisualizer = document.getElementById("waveVisualizer");
+        const elAudioStatusText = document.getElementById("audioStatusText");
+        const elFeedbackContainer = document.getElementById("feedbackContainer");
+        const elDifficultyBadge = document.getElementById("difficultyBadge");
+        const elFocusHint = document.getElementById("focusHint");
+        const elProgressBar = document.getElementById("progressBar");
+        const elProgressText = document.getElementById("progressText");
+        const elScoreDisplay = document.getElementById("scoreDisplay");
+        const elStreakDisplay = document.getElementById("streakDisplay");
+        const elTtsWarning = document.getElementById("ttsWarning");
+        const elVoiceSelect = document.getElementById("voiceSelect");
+        const elCustomWordForm = document.getElementById("customWordForm");
+        const elCustomWordInput = document.getElementById("customWordInput");
+        const elCustomHintInput = document.getElementById("customHintInput");
+        const elTeacherToast = document.getElementById("teacherToast");
+        const levelButtons = document.querySelectorAll(".level-btn");
+
+        /**
+         * Initialisiert oder reaktiviert den Web Audio Context.
+         */
+        function getAudioContext() {
+            if (!audioCtx) {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (AudioCtx) audioCtx = new AudioCtx();
+            }
+            if (audioCtx && audioCtx.state === "suspended") {
+                audioCtx.resume();
+            }
+            return audioCtx;
+        }
+
+        /**
+         * Gibt die gefilterte Liste (Wörter oder Sätze) passend zum aktiven Schwierigkeitsgrad zurück.
+         */
+        function getFilteredItems() {
+            const sourceList = activeMode === "sentences" ? sentencesList : wordsList;
+            if (activeLevel === "alle") return sourceList;
+            const filtered = sourceList.filter(item => item.level === activeLevel);
+            return filtered.length > 0 ? filtered : sourceList;
+        }
+
+        /**
+         * Hilfsfunktion für die aktuell gewählte deutsche Stimme.
+         */
+        function getChosenVoice() {
+            if (selectedVoiceURI) {
+                const chosen = germanVoices.find(v => v.voiceURI === selectedVoiceURI);
+                if (chosen) return chosen;
+            }
+            if (germanVoices.length > 0) {
+                return germanVoices.find(v => v.lang.toLowerCase() === "de-de") || germanVoices[0];
+            }
+            return null;
+        }
+
+        /**
+         * Spielt aus einer großen Sammlung wechselnder Belohnungsgeräusche
+         * zufällig eines ab (nie zweimal hintereinander dasselbe).
+         */
+        function playSuccessReaction() {
+            if (!sfxEnabled) return;
+
+            const successPool = [
+                {
+                    label: "MJ Hee-Hee! & Kichern",
+                    play: (ctx, now) => {
+                        const mjNotes = [
+                            { start: 0.00, dur: 0.17, fStart: 820,    fPeak: 1245, fEnd: 1108.7 },
+                            { start: 0.20, dur: 0.38, fStart: 1108.7, fPeak: 1661, fEnd: 1396.9 }
+                        ];
+                        mjNotes.forEach((n) => {
+                            const osc = ctx.createOscillator();
+                            const filter = ctx.createBiquadFilter();
+                            const gain = ctx.createGain();
+                            filter.type = "bandpass";
+                            filter.frequency.setValueAtTime(2300, now + n.start);
+                            filter.Q.setValueAtTime(3.4, now + n.start);
+                            osc.type = "sawtooth";
+                            osc.frequency.setValueAtTime(n.fStart, now + n.start);
+                            osc.frequency.exponentialRampToValueAtTime(n.fPeak, now + n.start + n.dur * 0.42);
+                            osc.frequency.exponentialRampToValueAtTime(n.fEnd, now + n.start + n.dur);
+                            gain.gain.setValueAtTime(0.001, now + n.start);
+                            gain.gain.linearRampToValueAtTime(0.22, now + n.start + 0.03);
+                            gain.gain.exponentialRampToValueAtTime(0.001, now + n.start + n.dur);
+                            osc.connect(filter);
+                            filter.connect(gain);
+                            gain.connect(ctx.destination);
+                            osc.start(now + n.start);
+                            osc.stop(now + n.start + n.dur + 0.02);
+                        });
+                        [0.65, 0.78, 0.91, 1.04, 1.17, 1.31].forEach((t, i) => {
+                            const osc = ctx.createOscillator();
+                            const gain = ctx.createGain();
+                            const f = 880 + (i % 3) * 110;
+                            osc.type = "sine";
+                            osc.frequency.setValueAtTime(f, now + t);
+                            osc.frequency.exponentialRampToValueAtTime(f * 1.18, now + t + 0.05);
+                            gain.gain.setValueAtTime(0.001, now + t);
+                            gain.gain.linearRampToValueAtTime(0.15, now + t + 0.02);
+                            gain.gain.exponentialRampToValueAtTime(0.001, now + t + 0.11);
+                            osc.connect(gain);
+                            gain.connect(ctx.destination);
+                            osc.start(now + t);
+                            osc.stop(now + t + 0.12);
+                        });
+                    },
+                    tts: [{ text: "Hii-hii! Hihihihihi!", pitch: 1.95, rate: 1.3 }]
+                },
+                {
+                    label: "8-Bit Level-Up Fanfare",
+                    play: (ctx, now) => {
+                        const notes = [523.25, 659.25, 783.99, 1046.50, 783.99, 1046.50];
+                        const times = [0.00, 0.09, 0.18, 0.27, 0.42, 0.54];
+                        const durs  = [0.08, 0.08, 0.08, 0.13, 0.10, 0.35];
+                        notes.forEach((freq, i) => {
+                            const osc = ctx.createOscillator();
+                            const gain = ctx.createGain();
+                            osc.type = "square";
+                            osc.frequency.setValueAtTime(freq, now + times[i]);
+                            gain.gain.setValueAtTime(0.12, now + times[i]);
+                            gain.gain.exponentialRampToValueAtTime(0.001, now + times[i] + durs[i]);
+                            osc.connect(gain);
+                            gain.connect(ctx.destination);
+                            osc.start(now + times[i]);
+                            osc.stop(now + times[i] + durs[i] + 0.01);
+                        });
+                    },
+                    tts: [{ text: "Level up! Mega!", pitch: 1.35, rate: 1.15 }]
+                },
+                {
+                    label: "Gummihuhn-Quiek-Triumph",
+                    play: (ctx, now) => {
+                        [0.0, 0.24, 0.48].forEach((t, idx) => {
+                            const osc = ctx.createOscillator();
+                            const gain = ctx.createGain();
+                            osc.type = "triangle";
+                            const base = 540 + idx * 120;
+                            osc.frequency.setValueAtTime(base, now + t);
+                            osc.frequency.exponentialRampToValueAtTime(base * 1.9, now + t + 0.08);
+                            osc.frequency.exponentialRampToValueAtTime(base * 0.75, now + t + 0.20);
+                            gain.gain.setValueAtTime(0.001, now + t);
+                            gain.gain.linearRampToValueAtTime(0.24, now + t + 0.03);
+                            gain.gain.exponentialRampToValueAtTime(0.001, now + t + 0.21);
+                            osc.connect(gain);
+                            gain.connect(ctx.destination);
+                            osc.start(now + t);
+                            osc.stop(now + t + 0.22);
+                        });
+                    },
+                    tts: [{ text: "Boing! Volltreffer!", pitch: 1.5, rate: 1.2 }]
+                },
+                {
+                    label: "Laser-Disco-Zisch",
+                    play: (ctx, now) => {
+                        [0.0, 0.14, 0.28, 0.42].forEach((t, i) => {
+                            const osc = ctx.createOscillator();
+                            const gain = ctx.createGain();
+                            osc.type = "sawtooth";
+                            osc.frequency.setValueAtTime(1400 + i * 250, now + t);
+                            osc.frequency.exponentialRampToValueAtTime(220, now + t + 0.12);
+                            gain.gain.setValueAtTime(0.14, now + t);
+                            gain.gain.exponentialRampToValueAtTime(0.001, now + t + 0.13);
+                            osc.connect(gain);
+                            gain.connect(ctx.destination);
+                            osc.start(now + t);
+                            osc.stop(now + t + 0.14);
+                        });
+                    },
+                    tts: [{ text: "Pew pew! Richtig!", pitch: 1.4, rate: 1.2 }]
+                },
+                {
+                    label: "Super-Münzen-Regen",
+                    play: (ctx, now) => {
+                        for (let i = 0; i < 6; i++) {
+                            const t = i * 0.10;
+                            const osc = ctx.createOscillator();
+                            const gain = ctx.createGain();
+                            osc.type = "sine";
+                            osc.frequency.setValueAtTime(987.77, now + t);
+                            osc.frequency.setValueAtTime(1318.51, now + t + 0.04);
+                            gain.gain.setValueAtTime(0.15, now + t);
+                            gain.gain.exponentialRampToValueAtTime(0.001, now + t + 0.16);
+                            osc.connect(gain);
+                            gain.connect(ctx.destination);
+                            osc.start(now + t);
+                            osc.stop(now + t + 0.17);
+                        }
+                    },
+                    tts: [{ text: "Bling bling! Jackpot!", pitch: 1.3, rate: 1.15 }]
+                },
+                {
+                    label: "Dramatischer Opern-Applaus-Akkord",
+                    play: (ctx, now) => {
+                        [261.63, 329.63, 392.00, 523.25, 659.25].forEach((freq) => {
+                            const osc = ctx.createOscillator();
+                            const gain = ctx.createGain();
+                            osc.type = "triangle";
+                            osc.frequency.setValueAtTime(freq, now);
+                            gain.gain.setValueAtTime(0.001, now);
+                            gain.gain.linearRampToValueAtTime(0.09, now + 0.08);
+                            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.95);
+                            osc.connect(gain);
+                            gain.connect(ctx.destination);
+                            osc.start(now);
+                            osc.stop(now + 0.98);
+                        });
+                    },
+                    tts: [{ text: "Bravissimo! Fantastisch!", pitch: 1.15, rate: 1.05 }]
+                },
+                {
+                    label: "Robotisches Lob-Piepsen",
+                    play: (ctx, now) => {
+                        [440, 880, 660, 1100, 1320].forEach((freq, i) => {
+                            const t = i * 0.075;
+                            const osc = ctx.createOscillator();
+                            const gain = ctx.createGain();
+                            osc.type = "square";
+                            osc.frequency.setValueAtTime(freq, now + t);
+                            gain.gain.setValueAtTime(0.10, now + t);
+                            gain.gain.exponentialRampToValueAtTime(0.001, now + t + 0.07);
+                            osc.connect(gain);
+                            gain.connect(ctx.destination);
+                            osc.start(now + t);
+                            osc.stop(now + t + 0.075);
+                        });
+                    },
+                    tts: [{ text: "Biep bop! Gehirn-Power aktiviert!", pitch: 0.85, rate: 1.15 }]
+                }
+            ];
+
+            let idx = Math.floor(Math.random() * successPool.length);
+            if (idx === lastSuccessSfxIdx) idx = (idx + 1) % successPool.length;
+            lastSuccessSfxIdx = idx;
+            const chosenSfx = successPool[idx];
+
+            try {
+                const ctx = getAudioContext();
+                if (ctx) chosenSfx.play(ctx, ctx.currentTime);
+            } catch (err) {
+                console.warn("Web Audio Belohnungs-Sound konnte nicht abgespielt werden:", err);
+            }
+
+            if ("speechSynthesis" in window && chosenSfx.tts) {
+                window.speechSynthesis.cancel();
+                const voice = getChosenVoice();
+                chosenSfx.tts.forEach(part => {
+                    const u = new SpeechSynthesisUtterance(part.text);
+                    u.lang = "de-DE";
+                    if (voice) u.voice = voice;
+                    u.pitch = part.pitch;
+                    u.rate = part.rate;
+                    window.speechSynthesis.speak(u);
+                });
+            }
+        }
+
+        /**
+         * Spielt aus einer großen Sammlung wechselnder Fehler- & Nervgeräusche
+         * zufällig eines ab (nie zweimal hintereinander dasselbe).
+         */
+        function playFailReaction() {
+            if (!sfxEnabled) return;
+
+            const failPool = [
+                {
+                    label: "Oh no, oh no, oh nonononono!",
+                    play: (ctx, now) => {
+                        const notes = [
+                            { freq: 311.13, endFreq: 293.66, start: 0.00, dur: 0.24 },
+                            { freq: 277.18, endFreq: 261.63, start: 0.28, dur: 0.24 },
+                            { freq: 246.94, endFreq: 130.81, start: 0.56, dur: 0.85 }
+                        ];
+                        notes.forEach((n) => {
+                            const osc = ctx.createOscillator();
+                            const gain = ctx.createGain();
+                            osc.type = "sawtooth";
+                            osc.frequency.setValueAtTime(n.freq, now + n.start);
+                            osc.frequency.exponentialRampToValueAtTime(n.endFreq, now + n.start + n.dur);
+                            gain.gain.setValueAtTime(0.001, now + n.start);
+                            gain.gain.linearRampToValueAtTime(0.16, now + n.start + 0.03);
+                            gain.gain.exponentialRampToValueAtTime(0.001, now + n.start + n.dur);
+                            osc.connect(gain);
+                            gain.connect(ctx.destination);
+                            osc.start(now + n.start);
+                            osc.stop(now + n.start + n.dur + 0.02);
+                        });
+                    },
+                    tts: [{ text: "Oh no! Oh no! Oh nonononono!", pitch: 1.32, rate: 1.15 }]
+                },
+                {
+                    label: "Nervige Quizshow-Tröte (Mööp!)",
+                    play: (ctx, now) => {
+                        [0.0, 0.34].forEach((t, idx) => {
+                            const dur = idx === 0 ? 0.26 : 0.65;
+                            [110, 116.54].forEach(f => {
+                                const osc = ctx.createOscillator();
+                                const gain = ctx.createGain();
+                                osc.type = "sawtooth";
+                                osc.frequency.setValueAtTime(f, now + t);
+                                osc.frequency.linearRampToValueAtTime(f * 0.88, now + t + dur);
+                                gain.gain.setValueAtTime(0.12, now + t);
+                                gain.gain.exponentialRampToValueAtTime(0.001, now + t + dur);
+                                osc.connect(gain);
+                                gain.connect(ctx.destination);
+                                osc.start(now + t);
+                                osc.stop(now + t + dur + 0.01);
+                            });
+                        });
+                    },
+                    tts: [{ text: "Mööp! Leider daneben!", pitch: 0.8, rate: 1.05 }]
+                },
+                {
+                    label: "Fiepsender Mücken-Alarm",
+                    play: (ctx, now) => {
+                        const osc = ctx.createOscillator();
+                        const lfo = ctx.createOscillator();
+                        const lfoGain = ctx.createGain();
+                        const gain = ctx.createGain();
+                        osc.type = "sine";
+                        osc.frequency.setValueAtTime(1850, now);
+                        osc.frequency.linearRampToValueAtTime(2150, now + 0.45);
+                        osc.frequency.linearRampToValueAtTime(1750, now + 0.9);
+                        lfo.frequency.value = 24;
+                        lfoGain.gain.value = 65;
+                        lfo.connect(lfoGain);
+                        lfoGain.connect(osc.frequency);
+                        gain.gain.setValueAtTime(0.001, now);
+                        gain.gain.linearRampToValueAtTime(0.14, now + 0.05);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.95);
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.start(now);
+                        lfo.start(now);
+                        osc.stop(now + 0.96);
+                        lfo.stop(now + 0.96);
+                    },
+                    tts: [{ text: "Bzzzzz! Da hat ein Buchstabe gestochen!", pitch: 1.55, rate: 1.15 }]
+                },
+                {
+                    label: "Traurige Posaune (Wah-Wah-Waaah)",
+                    play: (ctx, now) => {
+                        const steps = [
+                            { f: 293.66, t: 0.00, d: 0.28 },
+                            { f: 277.18, t: 0.30, d: 0.28 },
+                            { f: 261.63, t: 0.60, d: 0.28 },
+                            { f: 246.94, t: 0.90, d: 0.75 }
+                        ];
+                        steps.forEach((s, i) => {
+                            const osc = ctx.createOscillator();
+                            const gain = ctx.createGain();
+                            osc.type = "sawtooth";
+                            osc.frequency.setValueAtTime(s.f, now + s.t);
+                            if (i === 3) {
+                                osc.frequency.linearRampToValueAtTime(s.f * 0.78, now + s.t + s.d);
+                            }
+                            gain.gain.setValueAtTime(0.13, now + s.t);
+                            gain.gain.exponentialRampToValueAtTime(0.001, now + s.t + s.d);
+                            osc.connect(gain);
+                            gain.connect(ctx.destination);
+                            osc.start(now + s.t);
+                            osc.stop(now + s.t + s.d + 0.02);
+                        });
+                    },
+                    tts: [{ text: "Waaah waaaah!", pitch: 0.75, rate: 0.95 }]
+                },
+                {
+                    label: "Schriller Rauchmelder-Piep",
+                    play: (ctx, now) => {
+                        [0.0, 0.18, 0.36, 0.54].forEach(t => {
+                            const osc = ctx.createOscillator();
+                            const gain = ctx.createGain();
+                            osc.type = "square";
+                            osc.frequency.setValueAtTime(2850, now + t);
+                            gain.gain.setValueAtTime(0.11, now + t);
+                            gain.gain.exponentialRampToValueAtTime(0.001, now + t + 0.11);
+                            osc.connect(gain);
+                            gain.connect(ctx.destination);
+                            osc.start(now + t);
+                            osc.stop(now + t + 0.12);
+                        });
+                    },
+                    tts: [{ text: "Alarm! Tippfehler-Alarm!", pitch: 1.4, rate: 1.2 }]
+                },
+                {
+                    label: "Cartoon-Ausrutscher (Sliiiide-Plopp)",
+                    play: (ctx, now) => {
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = "sine";
+                        osc.frequency.setValueAtTime(1600, now);
+                        osc.frequency.exponentialRampToValueAtTime(120, now + 0.55);
+                        gain.gain.setValueAtTime(0.22, now);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.58);
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.start(now);
+                        osc.stop(now + 0.6);
+                    },
+                    tts: [{ text: "Huiii, ausgerutscht!", pitch: 1.45, rate: 1.2 }]
+                },
+                {
+                    label: "Abstürzender Modem-Roboter",
+                    play: (ctx, now) => {
+                        const freqs = [900, 420, 780, 310, 620, 190, 110];
+                        freqs.forEach((f, i) => {
+                            const t = i * 0.09;
+                            const osc = ctx.createOscillator();
+                            const gain = ctx.createGain();
+                            osc.type = "sawtooth";
+                            osc.frequency.setValueAtTime(f, now + t);
+                            gain.gain.setValueAtTime(0.13, now + t);
+                            gain.gain.exponentialRampToValueAtTime(0.001, now + t + 0.085);
+                            osc.connect(gain);
+                            gain.connect(ctx.destination);
+                            osc.start(now + t);
+                            osc.stop(now + t + 0.09);
+                        });
+                    },
+                    tts: [{ text: "Error vierhundertvier! Bitte neu tippen!", pitch: 0.7, rate: 1.15 }]
+                }
+            ];
+
+            let idx = Math.floor(Math.random() * failPool.length);
+            if (idx === lastFailSfxIdx) idx = (idx + 1) % failPool.length;
+            lastFailSfxIdx = idx;
+            const chosenFail = failPool[idx];
+
+            try {
+                const ctx = getAudioContext();
+                if (ctx) chosenFail.play(ctx, ctx.currentTime);
+            } catch (err) {
+                console.warn("Web Audio Fail-Sound konnte nicht abgespielt werden:", err);
+            }
+
+            if ("speechSynthesis" in window && chosenFail.tts) {
+                window.speechSynthesis.cancel();
+                const voice = getChosenVoice();
+                chosenFail.tts.forEach(part => {
+                    const u = new SpeechSynthesisUtterance(part.text);
+                    u.lang = "de-DE";
+                    if (voice) u.voice = voice;
+                    u.pitch = part.pitch;
+                    u.rate = part.rate;
+                    window.speechSynthesis.speak(u);
+                });
+            }
+        }
+
+        /**
+         * Löst dezente Papierschnipsel in Grau- und Graublaugrün-Tönen über der Karte aus.
+         */
+        function triggerConfettiBurst() {
+            const colors = ["#3c5d63", "#526067", "#232c30", "#688990", "#8fa4ab"];
+            const rect = elMainCard.getBoundingClientRect();
+            const originX = rect.left + rect.width / 2;
+            const originY = rect.top + rect.height * 0.35;
+
+            for (let i = 0; i < 28; i++) {
+                const piece = document.createElement("span");
+                piece.className = "confetti-piece";
+                const size = 6 + Math.random() * 5;
+                piece.style.width = `${size}px`;
+                piece.style.height = `${size * (Math.random() > 0.5 ? 1 : 0.55)}px`;
+                piece.style.backgroundColor = colors[i % colors.length];
+                piece.style.left = `${originX}px`;
+                piece.style.top = `${originY}px`;
+
+                const angle = Math.random() * Math.PI * 2;
+                const velocity = 80 + Math.random() * 170;
+                const tx = Math.cos(angle) * velocity;
+                const ty = Math.sin(angle) * velocity + 110;
+                const rot = (Math.random() - 0.5) * 820;
+
+                piece.style.setProperty("--tx", `${tx}px`);
+                piece.style.setProperty("--ty", `${ty}px`);
+                piece.style.setProperty("--rot", `${rot}deg`);
+
+                document.body.appendChild(piece);
+                setTimeout(() => piece.remove(), 1400);
+            }
+        }
+
+        /**
+         * Löst den Wackel-Effekt auf der Hauptkarte aus.
+         */
+        function triggerCardShake() {
+            elMainCard.classList.remove("animate-oh-no");
+            void elMainCard.offsetWidth;
+            elMainCard.classList.add("animate-oh-no");
+        }
+
+        /**
+         * Lädt verfügbare deutsche Sprachausgabe-Stimmen.
+         */
+        function loadVoices() {
+            if (!("speechSynthesis" in window)) {
+                elTtsWarning.classList.remove("hidden");
+                return;
+            }
+            const voices = window.speechSynthesis.getVoices();
+            if (!voices || voices.length === 0) return;
+
+            germanVoices = voices.filter(v => v.lang && v.lang.toLowerCase().startsWith("de"));
+
+            if (germanVoices.length === 0) {
+                elTtsWarning.classList.remove("hidden");
+            } else {
+                elTtsWarning.classList.add("hidden");
+                const currentVal = elVoiceSelect.value;
+                elVoiceSelect.innerHTML = '<option value="">Automatisch (de-DE)</option>';
+                germanVoices.forEach(voice => {
+                    const opt = document.createElement("option");
+                    opt.value = voice.voiceURI;
+                    opt.textContent = `${voice.name} (${voice.lang})`;
+                    elVoiceSelect.appendChild(opt);
+                });
+                if (currentVal) elVoiceSelect.value = currentVal;
+            }
+        }
+
+        /**
+         * Gibt das aktive Eingabeelement (Input für Wörter oder Textarea für Sätze) zurück.
+         */
+        function getActiveInputElement() {
+            return activeMode === "sentences" ? elSentenceInput : elWordInput;
+        }
+
+        /**
+         * Liest das aktuelle Fantasiewort oder den aktuellen Nonsens-Satz vor.
+         */
+        function speakCurrentItem(rate = 0.95) {
+            const list = getFilteredItems();
+            const current = list[currentIndex];
+            if (!current || !("speechSynthesis" in window)) return;
+
+            window.speechSynthesis.cancel();
+
+            const utterance = new SpeechSynthesisUtterance(current.text);
+            utterance.lang = "de-DE";
+            utterance.rate = rate;
+            utterance.pitch = 1.0;
+
+            if (selectedVoiceURI) {
+                const chosen = germanVoices.find(v => v.voiceURI === selectedVoiceURI);
+                if (chosen) utterance.voice = chosen;
+            } else if (germanVoices.length > 0) {
+                const deDE = germanVoices.find(v => v.lang.toLowerCase() === "de-de");
+                utterance.voice = deDE || germanVoices[0];
+            }
+
+            utterance.onstart = () => {
+                elWaveVisualizer.classList.add("is-speaking");
+                elAudioStatusText.innerHTML = rate < 0.85
+                    ? 'Wird <strong class="text-stamp">langsam</strong> vorgelesen …'
+                    : (activeMode === "sentences" ? 'Höre genau auf den ganzen Nonsens-Satz …' : 'Höre genau hin …');
+            };
+
+            utterance.onend = () => {
+                elWaveVisualizer.classList.remove("is-speaking");
+                elAudioStatusText.innerHTML = activeMode === "sentences"
+                    ? 'Schreibe den gesamten Nonsens-Satz mit korrekten Satzzeichen auf.'
+                    : 'Tippe das gehörte Fantasiewort unten ein.';
+            };
+
+            utterance.onerror = () => {
+                elWaveVisualizer.classList.remove("is-speaking");
+            };
+
+            window.speechSynthesis.speak(utterance);
+            getActiveInputElement().focus();
+        }
+
+        /**
+         * Rendert den aktuellen Eintrag (Wort oder Satz) und passt die Eingabefelder an.
+         */
+        function renderCurrentItem(autoSpeak = false) {
+            const list = getFilteredItems();
+            if (currentIndex >= list.length) currentIndex = 0;
+            const current = list[currentIndex];
+            solvedCurrent = false;
+
+            const isSentence = activeMode === "sentences";
+
+            // Postkarten-Kopfzeile & Eingabefeld umschalten
+            elPostcardHeaderLabel.textContent = isSentence ? "POSTKARTE · NONSENS-SATZ" : "POSTKARTE · FANTASIEWORT";
+            elInputLabel.textContent = isSentence ? "Dein notierter Nonsens-Satz:" : "Deine Schreibweise:";
+            elInputGrammarHint.textContent = isSentence
+                ? "Achte auf Satzanfang, Nomen und Satzzeichen (. ? ,)."
+                : "Hinweis: Fantasienomen schreibt man am Anfang groß.";
+
+            if (isSentence) {
+                elWordInput.classList.add("hidden");
+                elSentenceInput.classList.remove("hidden");
+            } else {
+                elSentenceInput.classList.add("hidden");
+                elWordInput.classList.remove("hidden");
+            }
+
+            const levelLabels = {
+                leicht: "Stufe: Leicht",
+                mittel: "Stufe: Mittel",
+                knifflig: "Stufe: Knifflig"
+            };
+            elDifficultyBadge.textContent = levelLabels[current.level] || "Stufe: Mittel";
+            elFocusHint.textContent = `Fokus: ${current.focus}`;
+
+            const pct = Math.round(((currentIndex + 1) / list.length) * 100);
+            elProgressBar.style.width = `${pct}%`;
+            elProgressText.textContent = `${currentIndex + 1} / ${list.length}`;
+
+            // Eingabefelder zurücksetzen
+            [elWordInput, elSentenceInput].forEach(el => {
+                el.value = "";
+                el.disabled = false;
+                el.classList.remove("border-ink-primary", "border-stamp");
+                el.classList.add("border-paper-edge");
+            });
+
+            elBtnCheck.disabled = false;
+            elBtnCheck.classList.remove("opacity-50", "cursor-not-allowed");
+
+            elFeedbackContainer.classList.add("hidden");
+            elFeedbackContainer.innerHTML = "";
+
+            if (autoSpeak) {
+                speakCurrentItem(0.95);
+            } else {
+                elAudioStatusText.innerHTML = isSentence
+                    ? 'Klicke auf <strong class="text-ink-primary">„Anhören“</strong> und schreibe den gesamten Nonsens-Satz auf.'
+                    : 'Klicke auf <strong class="text-ink-primary">„Anhören“</strong> und notiere das Fantasiewort.';
+            }
+        }
+
+        /**
+         * Erzeugt die Fehleranalyse:
+         * - Im Wortmodus: Zeichen-für-Zeichen-Kästchen
+         * - Im Satzmodus: Wort-für-Wort-Vergleich (inkl. Zeichensetzung) für optimale Übersicht
+         */
+        function buildDiffHTML(userInput, targetText) {
+            if (activeMode === "sentences") {
+                const userWords = userInput.split(/\s+/).filter(Boolean);
+                const targetWords = targetText.split(/\s+/).filter(Boolean);
+                const maxWords = Math.max(userWords.length, targetWords.length);
+
+                let userBadges = "";
+                let targetBadges = "";
+
+                for (let i = 0; i < maxWords; i++) {
+                    const uWord = userWords[i] || "";
+                    const tWord = targetWords[i] || "";
+                    const isExact = uWord === tWord && uWord !== "";
+                    const isCaseOnly = !isExact && uWord !== "" && tWord !== "" && uWord.toLowerCase() === tWord.toLowerCase();
+
+                    if (uWord === "") {
+                        userBadges += `<span class="inline-block px-2.5 py-1 rounded border border-dashed border-stamp/70 text-stamp text-sm">[fehlt]</span>`;
+                    } else if (isExact) {
+                        userBadges += `<span class="inline-block px-2.5 py-1 bg-paper-light border border-paper-edge text-ink-primary text-sm">${escapeHTML(uWord)}</span>`;
+                    } else if (isCaseOnly) {
+                        userBadges += `<span class="inline-block px-2.5 py-1 bg-slate-200/80 border border-slate-500/50 text-ink-primary text-sm underline decoration-dotted" title="Groß-/Kleinschreibung">${escapeHTML(uWord)}</span>`;
+                    } else {
+                        userBadges += `<span class="inline-block px-2.5 py-1 bg-stamp/15 border border-stamp text-stamp font-bold text-sm">${escapeHTML(uWord)}</span>`;
+                    }
+
+                    if (tWord !== "") {
+                        targetBadges += `<span class="inline-block px-2.5 py-1 ${isExact ? "bg-paper-light/70 border-paper-edge text-ink-muted" : "bg-ink-primary text-paper-light border-ink-primary font-bold"} border text-sm">${escapeHTML(tWord)}</span>`;
+                    }
+                }
+
+                return `
+                    <div class="mt-4 pt-4 border-t border-paper-edge flex flex-col gap-3">
+                        <div>
+                            <span class="text-xs uppercase tracking-wider text-ink-muted font-bold block mb-1.5">Dein Satz:</span>
+                            <div class="flex flex-wrap gap-1.5 leading-relaxed">${userBadges}</div>
+                        </div>
+                        <div>
+                            <span class="text-xs uppercase tracking-wider text-ink-muted font-bold block mb-1.5">Richtiger Satz:</span>
+                            <div class="flex flex-wrap gap-1.5 leading-relaxed">${targetBadges}</div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Einzelwort-Vergleich Zeichen für Zeichen
+            const maxLen = Math.max(userInput.length, targetText.length);
+            let userBoxes = "";
+            let targetBoxes = "";
+
+            for (let i = 0; i < maxLen; i++) {
+                const uChar = userInput[i] || "";
+                const tChar = targetText[i] || "";
+                const isMatch = uChar === tChar && uChar !== "";
+                const isCaseOnlyDiff = !isMatch && uChar !== "" && tChar !== "" && uChar.toLowerCase() === tChar.toLowerCase();
+
+                if (uChar === "") {
+                    userBoxes += `<span class="inline-flex items-center justify-center w-8 h-9 border border-dashed border-stamp/70 text-stamp text-base font-bold">_</span>`;
+                } else if (isMatch) {
+                    userBoxes += `<span class="inline-flex items-center justify-center w-8 h-9 bg-paper-light border border-paper-edge text-ink-primary text-base font-bold">${escapeHTML(uChar)}</span>`;
+                } else if (isCaseOnlyDiff) {
+                    userBoxes += `<span class="inline-flex items-center justify-center w-8 h-9 bg-slate-200/80 border border-slate-500/50 text-ink-primary text-base font-bold underline decoration-dotted" title="Groß-/Kleinschreibung">${escapeHTML(uChar)}</span>`;
+                } else {
+                    userBoxes += `<span class="inline-flex items-center justify-center w-8 h-9 bg-stamp/15 border border-stamp text-stamp text-base font-bold">${escapeHTML(uChar)}</span>`;
+                }
+
+                if (tChar !== "") {
+                    targetBoxes += `<span class="inline-flex items-center justify-center w-8 h-9 ${isMatch ? "bg-paper-light/70 border-paper-edge text-ink-muted" : "bg-ink-primary border-ink-primary text-paper-light"} border text-base font-bold">${escapeHTML(tChar)}</span>`;
+                }
+            }
+
+            return `
+                <div class="mt-4 pt-4 border-t border-paper-edge flex flex-col gap-3">
+                    <div>
+                        <span class="text-xs uppercase tracking-wider text-ink-muted font-bold block mb-1.5">Deine Eingabe:</span>
+                        <div class="flex flex-wrap gap-1.5">${userBoxes}</div>
+                    </div>
+                    <div>
+                        <span class="text-xs uppercase tracking-wider text-ink-muted font-bold block mb-1.5">Richtige Schreibweise:</span>
+                        <div class="flex flex-wrap gap-1.5">${targetBoxes}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        /**
+         * Löst dezente Papierschnipsel in Grau- und Graublaugrün-Tönen über der Karte aus.
+         */
+        function checkAnswer() {
+            if (solvedCurrent) {
+                nextItem();
+                return;
+            }
+
+            const activeInput = getActiveInputElement();
+            const rawInput = activeInput.value.trim().replace(/\s+/g, " ");
+            if (!rawInput) {
+                activeInput.focus();
+                speakCurrentItem(0.95);
+                return;
+            }
+
+            const list = getFilteredItems();
+            const current = list[currentIndex];
+            const target = current.text;
+
+            elFeedbackContainer.classList.remove("hidden");
+
+            if (rawInput === target) {
+                // RICHTIG!
+                solvedCurrent = true;
+                streak += 1;
+                const basePoints = activeMode === "sentences" ? 20 : 10;
+                score += basePoints + Math.min(streak * 2, 10);
+                updateScoreboard();
+
+                activeInput.disabled = true;
+                activeInput.classList.remove("border-paper-edge", "border-stamp");
+                activeInput.classList.add("border-ink-primary");
+                elBtnCheck.disabled = true;
+                elBtnCheck.classList.add("opacity-50", "cursor-not-allowed");
+
+                playSuccessReaction();
+                triggerConfettiBurst();
+
+                elFeedbackContainer.className = "animate-pop rounded-xl p-5 border border-ink-primary/40 bg-paper-light/90";
+                elFeedbackContainer.innerHTML = `
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div class="flex items-start gap-3">
+                            <div class="w-8 h-8 rounded-lg border border-ink-primary/40 bg-paper-base flex items-center justify-center text-ink-primary font-bold shrink-0 mt-0.5">
+                                ✓
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <h3 class="font-bold text-base sm:text-lg text-ink-primary">Tadellos notiert!</h3>
+                                    <span class="text-xs tracking-wider uppercase px-2 py-0.5 rounded border border-stamp/50 text-stamp">Volltreffer!</span>
+                                </div>
+                                <p class="text-sm text-ink-muted mt-1 leading-relaxed">
+                                    <strong class="text-ink-primary">„${escapeHTML(target)}“</strong> – ${escapeHTML(current.ruleTip)}
+                                </p>
+                            </div>
+                        </div>
+                        <button id="btnNextWord" type="button" class="bg-stamp hover:bg-stamp-hover text-paper-light font-bold px-5 py-2.5 rounded-lg transition-all cursor-pointer whitespace-nowrap self-end sm:self-center">
+                            Weiter →
+                        </button>
+                    </div>
+                `;
+
+                const btnNext = document.getElementById("btnNextWord");
+                btnNext.addEventListener("click", nextItem);
+                btnNext.focus();
+
+            } else {
+                // FALSCH
+                streak = 0;
+                updateScoreboard();
+
+                playFailReaction();
+                triggerCardShake();
+
+                const isOnlyCaseWrong = rawInput.toLowerCase() === target.toLowerCase();
+
+                activeInput.classList.remove("border-paper-edge");
+                activeInput.classList.add("border-stamp");
+
+                elFeedbackContainer.className = "animate-pop rounded-xl p-5 border border-stamp/60 bg-paper-light/90";
+                elFeedbackContainer.innerHTML = `
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 rounded-lg border border-stamp bg-stamp/10 flex items-center justify-center text-stamp font-bold shrink-0 mt-0.5">
+                            ✕
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <h3 class="font-bold text-base sm:text-lg text-stamp">
+                                    ${isOnlyCaseWrong ? "Oh no! Fast – achte auf Groß- und Kleinschreibung." : "Oh no, oh nononono! Vergleiche deine Notiz:"}
+                                </h3>
+                            </div>
+                            <p class="text-sm text-ink-muted mt-1 leading-relaxed">
+                                <strong class="text-ink-primary">Merkhilfe:</strong> ${escapeHTML(current.ruleTip)}
+                            </p>
+                        </div>
+                    </div>
+
+                    ${buildDiffHTML(rawInput, target)}
+
+                    <div class="flex flex-wrap items-center justify-end gap-3 mt-4">
+                        <button id="btnRetry" type="button" class="bg-paper-base hover:bg-paper-dark text-ink-primary border border-paper-edge font-bold px-4 py-2 rounded-lg transition-all cursor-pointer text-xs sm:text-sm">
+                            Nochmal versuchen
+                        </button>
+                        <button id="btnSkipNext" type="button" class="bg-ink-primary hover:bg-ink-primary/90 text-paper-light font-bold px-4 py-2 rounded-lg transition-all cursor-pointer text-xs sm:text-sm">
+                            Überspringen →
+                        </button>
+                    </div>
+                `;
+
+                document.getElementById("btnRetry").addEventListener("click", () => {
+                    activeInput.value = "";
+                    activeInput.classList.remove("border-stamp");
+                    activeInput.classList.add("border-paper-edge");
+                    elFeedbackContainer.classList.add("hidden");
+                    activeInput.focus();
+                    speakCurrentItem(0.8);
+                });
+
+                document.getElementById("btnSkipNext").addEventListener("click", nextItem);
+            }
+        }
+
+        /**
+         * Wechselt zum nächsten Wort oder Satz; mischt nach Rundenende automatisch neu.
+         */
+        function nextItem() {
+            const list = getFilteredItems();
+            const justPlayedText = list[currentIndex] ? list[currentIndex].text : null;
+
+            if (currentIndex + 1 >= list.length) {
+                if (activeMode === "sentences") {
+                    sentencesList = fisherYatesShuffle(sentencesList, justPlayedText);
+                } else {
+                    wordsList = fisherYatesShuffle(wordsList, justPlayedText);
+                }
+                currentIndex = 0;
+                elAudioStatusText.innerHTML = '<strong class="text-stamp">Neue Runde!</strong> Alle Karten wurden frisch gemischt.';
+            } else {
+                currentIndex += 1;
+            }
+            renderCurrentItem(true);
+        }
+
+        /**
+         * Mischt die aktuelle Sammlung sofort neu durch.
+         */
+        function reshuffleNow() {
+            const list = getFilteredItems();
+            const currentText = list[currentIndex] ? list[currentIndex].text : null;
+            if (activeMode === "sentences") {
+                sentencesList = fisherYatesShuffle(sentencesList, currentText);
+            } else {
+                wordsList = fisherYatesShuffle(wordsList, currentText);
+            }
+            currentIndex = 0;
+            renderCurrentItem(false);
+            elAudioStatusText.innerHTML = '<strong class="text-stamp">Frisch gemischt!</strong> Klicke auf „Anhören“ für die nächste Karte.';
+        }
+
+        /**
+         * Schaltet zwischen Einzelwörtern und ganzen Nonsens-Sätzen um.
+         */
+        function switchMode(newMode) {
+            if (activeMode === newMode) return;
+            activeMode = newMode;
+            currentIndex = 0;
+
+            if (newMode === "words") {
+                elModeWordsBtn.classList.add("bg-stamp", "text-paper-light", "font-bold");
+                elModeWordsBtn.classList.remove("text-ink-muted", "font-normal");
+                elModeSentencesBtn.classList.remove("bg-stamp", "text-paper-light", "font-bold");
+                elModeSentencesBtn.classList.add("text-ink-muted", "font-normal");
+            } else {
+                elModeSentencesBtn.classList.add("bg-stamp", "text-paper-light", "font-bold");
+                elModeSentencesBtn.classList.remove("text-ink-muted", "font-normal");
+                elModeWordsBtn.classList.remove("bg-stamp", "text-paper-light", "font-bold");
+                elModeWordsBtn.classList.add("text-ink-muted", "font-normal");
+            }
+
+            renderCurrentItem(false);
+        }
+
+        /**
+         * Aktualisiert Punkte und Serie im Header.
+         */
+        function updateScoreboard() {
+            elScoreDisplay.textContent = score;
+            elStreakDisplay.textContent = streak;
+        }
+
+        /**
+         * Hilfsfunktion gegen XSS bei Benutzereingaben.
+         */
+        function escapeHTML(str) {
+            return str
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // --- Event Listener ---
+
+        elBtnToggleSfx.addEventListener("click", () => {
+            sfxEnabled = !sfxEnabled;
+            elSfxIcon.textContent = sfxEnabled ? "♪" : "×";
+            elSfxLabel.textContent = sfxEnabled ? "Ton: An" : "Ton: Aus";
+            if (!sfxEnabled && "speechSynthesis" in window) {
+                window.speechSynthesis.cancel();
+            }
+        });
+
+        elModeWordsBtn.addEventListener("click", () => switchMode("words"));
+        elModeSentencesBtn.addEventListener("click", () => switchMode("sentences"));
+        elBtnShuffle.addEventListener("click", reshuffleNow);
+
+        elBtnTestSuccessSfx.addEventListener("click", () => {
+            playSuccessReaction();
+            triggerConfettiBurst();
+        });
+
+        elBtnTestFailSfx.addEventListener("click", () => {
+            playFailReaction();
+            triggerCardShake();
+        });
+
+        elBtnSpeakNormal.addEventListener("click", () => speakCurrentItem(0.95));
+        elBtnSpeakSlow.addEventListener("click", () => speakCurrentItem(0.7));
+
+        elAnswerForm.addEventListener("submit", (e) => {
+            e.preventDefault();
+            checkAnswer();
+        });
+
+        // Enter-Taste im Satz-Textarea soll ebenfalls direkt prüfen (Shift+Enter für Zeilenumbruch)
+        elSentenceInput.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                checkAnswer();
+            }
+        });
+
+        // Schwierigkeits-Filter umschalten
+        levelButtons.forEach(btn => {
+            btn.addEventListener("click", () => {
+                activeLevel = btn.dataset.level;
+                const currentList = getFilteredItems();
+                const currentText = currentList[currentIndex] ? currentList[currentIndex].text : null;
+
+                if (activeMode === "sentences") {
+                    sentencesList = fisherYatesShuffle(sentencesList, currentText);
+                } else {
+                    wordsList = fisherYatesShuffle(wordsList, currentText);
+                }
+                currentIndex = 0;
+
+                levelButtons.forEach(b => {
+                    b.classList.remove("bg-ink-primary", "text-paper-light", "font-bold");
+                    b.classList.add("text-ink-muted");
+                });
+                btn.classList.add("bg-ink-primary", "text-paper-light", "font-bold");
+                btn.classList.remove("text-ink-muted");
+
+                renderCurrentItem(false);
+            });
+        });
+
+        elVoiceSelect.addEventListener("change", (e) => {
+            selectedVoiceURI = e.target.value;
+            speakCurrentItem(0.95);
+        });
+
+        // Eigenes Wort oder eigenen Nonsens-Satz hinzufügen (automatische Erkennung anhand von Leerzeichen)
+        elCustomWordForm.addEventListener("submit", (e) => {
+            e.preventDefault();
+            const newText = elCustomWordInput.value.trim().replace(/\s+/g, " ");
+            const newHint = elCustomHintInput.value.trim() || "Eigene Übungsaufgabe";
+
+            if (!newText) return;
+
+            const isSentenceEntry = newText.includes(" ");
+            const customObj = {
+                text: newText,
+                level: activeLevel === "alle" ? "mittel" : activeLevel,
+                focus: newHint,
+                ruleTip: `Achte genau auf die Schreibung von „${newText}“.`
+            };
+
+            if (isSentenceEntry) {
+                sentencesList.unshift(customObj);
+                if (activeMode !== "sentences") switchMode("sentences");
+            } else {
+                wordsList.unshift(customObj);
+                if (activeMode !== "words") switchMode("words");
+            }
+            currentIndex = 0;
+
+            elCustomWordInput.value = "";
+            elCustomHintInput.value = "";
+
+            elTeacherToast.textContent = `✓ „${newText}“ wurde als ${isSentenceEntry ? "Nonsens-Satz" : "Fantasiewort"} hinzugefügt.`;
+            elTeacherToast.classList.remove("hidden");
+            setTimeout(() => elTeacherToast.classList.add("hidden"), 4000);
+
+            renderCurrentItem(true);
+        });
+
+        window.addEventListener("load", () => {
+            loadVoices();
+            if ("speechSynthesis" in window) {
+                window.speechSynthesis.onvoiceschanged = loadVoices;
+            }
+            renderCurrentItem(false);
+        });
+    </script>
+</body>
+</html>
